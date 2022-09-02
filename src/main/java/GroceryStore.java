@@ -1,8 +1,5 @@
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 
 public class GroceryStore {
@@ -14,7 +11,6 @@ public class GroceryStore {
        Scanner userInput = new Scanner(System.in);
        boolean ask=true;   //needed for while loop
        String itemName="";    //will hold the name of item we want
-
        //loop to get item name
        while(ask) {
            System.out.println("Please enter the name of the item you would like to add.");
@@ -24,11 +20,9 @@ public class GroceryStore {
                 ask=false;
            }
        }
-
        //get the quantity available
        boolean keepAsking=true;
        int maxAmount= db.getSpecificItem(itemName).quantity;
-
        System.out.println("How many would you like? Max is " + maxAmount + " items.");
        //check if it works, or keep asking
        while(keepAsking){
@@ -50,21 +44,17 @@ public class GroceryStore {
        Scanner userInput = new Scanner(System.in);
        boolean ask=true;   //needed for while loop
        String itemName="";    //will hold the name of item we want to remove
-
        //loop to get item name
        while(ask) {
            System.out.println("Here are the items in you cart:");
            db.printOutItems(db.returnCart());
            System.out.println("Please enter the name of the item you would like to delete.");
-
            String newline = userInput.nextLine();
            if(db.checkIfIn(newline,db.returnCart())){
                itemName=newline;
                ask=false;
            }
-       }
-
-       //get the quantity available
+       }//get the quantity available
        boolean keepAsking=true;
        int maxAmount= db.getSpecificCartItem(itemName).quantity;
        System.out.println("How many would you like to remove ? Max is " + maxAmount + " items.");
@@ -90,45 +80,103 @@ public class GroceryStore {
        if(db.returnCart().size()==0){
            System.out.println("Thanks for visiting, come back soon!");
        }else{
-           List<item> cart;
-           cart=db.returnCart();
-           double total =0.0;
-           System.out.println("Here is your receipt:");
-
-           //print date
-           SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-           Date date = new Date();
-           String newOne= formatter.format(date);
-           String[] val= newOne.split(" ");
-           System.out.println("----------------------------------------------------------------");
-           System.out.println("   Date: " + val[0] + "  Time: "+val[1]+  "    ");
-
-           System.out.println("    --------------------------------------------------------    ");
-           //print out bought items
-           for(int i=0; i< cart.size(); i++){
-               System.out.println("item_name='" + cart.get(i).item_name +
-                       "  | isle='" + cart.get(i).isle  +
-                       "  | quantity=" + cart.get(i).quantity +
-                       "  | price per item=" + cart.get(i).price +
-                       "  | total price=" + cart.get(i).price*cart.get(i).quantity);
-               total=total+(cart.get(i).price*cart.get(i).quantity);
+           boolean yesOrno=true;
+           Scanner userInput = new Scanner(System.in);
+           while(yesOrno){
+               System.out.println("Would you like to try for a coupon up to 50% on off all items: yes or no?");
+               String newline = userInput.nextLine();
+               if(newline.equals("yes")){
+                   coupons();
+                   yesOrno=false;
+               }else if(newline.equals("no")){
+                   List<item> cart;
+                   cart=db.returnCart();
+                   float total =0;
+                   System.out.println("Here is your receipt:");
+                   //print date
+                   SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+                   Date date = new Date();
+                   String newOne= formatter.format(date);
+                   String[] val= newOne.split(" ");
+                   System.out.println("--------------------------------------------------------------------------------------");
+                   System.out.println("   Date: " + val[0] + "  Time: "+val[1]+  "    ");
+                   System.out.println("-----------------------------------------------------------------------------------    ");
+                   //print out bought items
+                   for(int i=0; i< cart.size(); i++){
+                       System.out.println("Item Name: " + cart.get(i).item_name +
+                               " | Isle: " + cart.get(i).isle  +
+                               " | Quantity: " + cart.get(i).quantity +
+                               " | Price: $" + String. format("%.2f", cart.get(i).price )+
+                               " | Total Price: $" +  String. format("%.2f", cart.get(i).price*cart.get(i).quantity));
+                       total=total+(cart.get(i).price*cart.get(i).quantity);
+                   }
+                   System.out.println("-----------------------------------------------------------------------------------    ");
+                   //print out total items and cost
+                   System.out.println("   Total Items: " + cart.size() + "      "+ "Total Price: $" + String. format("%.2f", total)+"   ");
+                   System.out.println("--------------------------------------------------------------------------------------");
+                   System.out.println("Thanks for visiting, come back soon!");
+                   //empties the cart and restocks the store
+                   db.emptyCart();
+                   yesOrno=false;
+               }
            }
-           System.out.println("    --------------------------------------------------------    ");
-           String strDouble = String. format("%. 2f", total);
-           //print out total items and cost
-           System.out.println("   Total Items: " + cart.size() + "      "+ "Total Price: " + strDouble+"   ");
-
-           System.out.println("----------------------------------------------------------------");
-           System.out.println("Thanks for visiting, come back soon!");
-
        }
-
-
-
+   }
+   public static void coupons(){
+       Random r = new Random();
+       databaseFunctions db = new databaseFunctions();
+       List<String> isles = Arrays.asList("produce", "bakery", "meat", "dairy", "convenience", "all");
+       List<item> cart= db.returnCart();
+       float total =0;
+       float nonCouponTotal=0;
+       String isleToApplyCoupon = randomItemChooser(isles);
+       float percent = r.nextInt(50);
+       System.out.println("Congratulations: you got "+percent+ "% off on all "+isleToApplyCoupon+" items! \n" );
+       System.out.println("Here is your receipt:");
+       SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+       Date date = new Date();
+       String newOne= formatter.format(date);
+       String[] val= newOne.split(" ");
+       System.out.println("------------------------------------------------------------------------------------------------------------------------");
+       System.out.println("   Date: " + val[0] + "  Time: "+val[1]+  "    ");
+       System.out.println("---------------------------------------------------------------------------------------------------------    ");
+       //print out bought items
+       for(int i=0; i< cart.size(); i++){
+           if(cart.get(i).isle.equals(isleToApplyCoupon) || isleToApplyCoupon.equals("all")){
+               System.out.println("Item Name: " + cart.get(i).item_name +
+                       " | Isle: " + cart.get(i).isle +
+                       " | Quantity: " + cart.get(i).quantity +
+                       " | Price: $" + String.format("%.2f", cart.get(i).price) +
+                       " | Total : $" + String.format("%.2f", cart.get(i).price * cart.get(i).quantity) +
+                       " | Total with Coupon : $" + String.format("%.2f", ((cart.get(i).price * cart.get(i).quantity)*(1-(percent/100)))));
+               total = total + (((cart.get(i).price * cart.get(i).quantity)*(1-(percent/100))));
+               nonCouponTotal=nonCouponTotal+(cart.get(i).price * cart.get(i).quantity);
+           }else {
+               System.out.println("Item Name: " + cart.get(i).item_name +
+                       " | Isle: " + cart.get(i).isle +
+                       " | Quantity: " + cart.get(i).quantity +
+                       " | Price: $" + String.format("%.2f", cart.get(i).price) +
+                       " | Total Price: $" + String.format("%.2f", cart.get(i).price * cart.get(i).quantity));
+               total = total + (cart.get(i).price * cart.get(i).quantity);
+               nonCouponTotal+=(cart.get(i).price * cart.get(i).quantity);
+           }
+       }
+       System.out.println("---------------------------------------------------------------------------------------------------------    ");
+       //print out total items and cost
+       System.out.println("   Total Items: " + cart.size() + "      "+ "Price Without Coupon: $" + String. format("%.2f", nonCouponTotal)+"   "+ "Total Price: $" + String. format("%.2f", total));
+       System.out.println("   You saved $"+(String.format("%.2f",(nonCouponTotal-total)))+ " with the "+ percent +
+               "% coupon on "+isleToApplyCoupon+" items!");
+       System.out.println("------------------------------------------------------------------------------------------------------------------------");
+       System.out.println("Thanks for visiting, come back soon!");
+       //empties the cart and restocks the store
+       db.emptyCart();
    }
 
-
-
+    public static <T> T randomItemChooser(List<T> str) {
+        Random rand = new Random();
+        T randomElement = str.get(rand.nextInt(str.size()));
+        return randomElement;
+    }
 
 
 
@@ -141,34 +189,28 @@ public class GroceryStore {
         boolean visitingStore = true;
 
         while(visitingStore){
-            System.out.println("Welcome! Please select an option: first isle, choose isle, leave");
+            System.out.println("Welcome! Please select an option: first isle, choose isle, leave.");
             Scanner userInput = new Scanner(System.in);
             String line = userInput.nextLine();
 
-            //they want to leave
             if(line.equals("leave")){
-               // g.payAndLeave();
                 visitingStore = false;
 
             } else if(line.equals("first isle")){
-
                 int isleNumber=0;
                 while(visitingStore && isleNumber<isles.size()){
-//
                     List<item> currentIsleItemList;
                     List<String> options= Arrays.asList("add item", "remove item", "next isle", "view cart", "leave");
                     boolean badOption=true;
-
                     //print this isle's items
-                    System.out.println("Welcome to the " +isles.get(isleNumber)+" isle! ");
+                    System.out.println("Welcome to the " +isles.get(isleNumber)+" isle! \n");
                     System.out.println("Here are the items in this Isle:");
-
                     currentIsleItemList=  db.returnItemsInIsle(isles.get(isleNumber));
                     db.printOutItems(currentIsleItemList);
-
+                    System.out.println("\n");
                     //checks if option is correct
                     while(badOption ) {
-                        System.out.println("Select an option: add item, remove item, next isle, view cart, leave");
+                        System.out.println("Select an option: add item, remove item, next isle, view cart, leave.");
                         Scanner userInput1 = new Scanner(System.in);
                         String newline = userInput1.nextLine();
                         if (options.contains(newline)) {
@@ -186,49 +228,40 @@ public class GroceryStore {
                                 }else {
                                     System.out.println("Here are the items in your cart:");
                                     db.printOutItems(db.returnCart());
+                                    System.out.println("\n");
                                 }
                             }else if(newline.equals("next isle")){
                                 badOption=false;
-                                //break;
-
-                            } else if(newline.equals("leave"))
-                            {//leave
-                              //  g.payAndLeave();
+                            } else if(newline.equals("leave")) {
                                 badOption=false;
                                 visitingStore=false;
-
                             }
                         }
-                        //it was a bad option, so you have to keep asking
                     }
                     isleNumber++;
-
                 }
-
-
              visitingStore=false;
+
             } else if(line.equals("choose isle")){
                 boolean badIsle = true;
                 while(badIsle){
-                    System.out.println("Please select an isle: produce, bakery, meat, dairy, convenience");
+                    System.out.println("Please select an isle: produce, bakery, meat, dairy, convenience.");
                     Scanner userInput9 = new Scanner(System.in);
                     String islename = userInput9.nextLine();
                     if(isles.contains(islename)){ //is good
-
                         List<item> currentIsleItemList;
                         List<String> options= Arrays.asList("add item", "remove item", "choose isle", "view cart", "leave");
                         boolean badOption=true;
 
                         //print this isle's items
-                        System.out.println("Welcome to the " +islename+" isle! ");
+                        System.out.println("Welcome to the " +islename+" isle! \n ");
                         System.out.println("Here are the items in this isle:");
-
                         currentIsleItemList=  db.returnItemsInIsle(islename);
                         db.printOutItems(currentIsleItemList);
-
+                        System.out.println("\n");
                         //checks if option is correct
                         while(badOption ) {
-                            System.out.println("Select an option: add item, remove item, choose isle, view cart, leave");
+                            System.out.println("Select an option: add item, remove item, choose isle, view cart, leave.");
                             Scanner userInput2 = new Scanner(System.in);
                             String inline = userInput2.nextLine();
                             if (options.contains(inline)) {
@@ -246,31 +279,21 @@ public class GroceryStore {
                                     }else {
                                         System.out.println("Here are the items in your cart:");
                                         db.printOutItems(db.returnCart());
+                                        System.out.println("\n");
                                     }
                                 }else if(inline.equals("choose isle")){
                                     badOption=false;
-
-                                }else if(inline.equals("leave")){//leave
-                                    //g.payAndLeave();
+                                }else if(inline.equals("leave")){
                                     badOption=false;
+                                    badIsle=false;
                                     visitingStore=false;
-
                                 }
                             }
-                            //it was a bad option, so you have to keep asking
                         }
-                        badIsle=false;
-
                     }
-
                 }
-
-
             }
         }
         g.payAndLeave();
-
-
     }
-
 }

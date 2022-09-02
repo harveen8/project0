@@ -13,9 +13,9 @@ public class item {
 
     @Override
     public String toString() {
-        return "item_name='" + item_name + '\'' +
-                "  | isle='" + isle + '\'' +
-                "  | quantity=" + quantity +
-                "  | price=" + price ;
+        return "Item Name: " + item_name  +
+                "  | Isle: " + isle  +
+                "  | Quantity: " + quantity +
+                "  | Price: $" + String. format("%.2f", price) ;
     }
 }
