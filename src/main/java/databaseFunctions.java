@@ -88,10 +88,12 @@ public class databaseFunctions {
         try{
             //we want to delete all
             if(getSpecificCartItem(thing.item_name).quantity == quantity){
+
                 PreparedStatement statement = conn.prepareStatement("delete from groceryCart where item_name = ?");
                 statement.setString(1,thing.item_name);
                 statement.executeUpdate();
-                updateGroceryStore(thing, thing.quantity+getSpecificItem(thing.item_name).quantity);
+                updateGroceryStore(thing, quantity+getSpecificItem(thing.item_name).quantity);
+
             }else{
                 // we want to remove some
                 PreparedStatement statement = conn.prepareStatement("update groceryCart set quantity = ? " +
@@ -99,7 +101,7 @@ public class databaseFunctions {
                 statement.setInt(1,getSpecificCartItem(thing.item_name).quantity-quantity);
                 statement.setString(2, thing.item_name);
                 statement.executeUpdate();
-                updateGroceryStore(thing, thing.quantity+getSpecificItem(thing.item_name).quantity);
+                updateGroceryStore(thing, quantity+getSpecificItem(thing.item_name).quantity);
             }
 
         }catch(SQLException e){

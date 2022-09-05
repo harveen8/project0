@@ -5,13 +5,15 @@ import java.util.*;
 public class GroceryStore {
 
 
-   public void addItem(List<item> currentIsleItemList){
+   public void addItem(String currentIsle){
        //some boilerplate code
        databaseFunctions db= new databaseFunctions();
        Scanner userInput = new Scanner(System.in);
+      List <item> currentIsleItemList = db.returnItemsInIsle(currentIsle);
        boolean ask=true;   //needed for while loop
        String itemName="";    //will hold the name of item we want
        //loop to get item name
+       db.printOutItems(currentIsleItemList);
        while(ask) {
            System.out.println("Please enter the name of the item you would like to add.");
            String newline = userInput.nextLine();
@@ -23,7 +25,12 @@ public class GroceryStore {
        //get the quantity available
        boolean keepAsking=true;
        int maxAmount= db.getSpecificItem(itemName).quantity;
-       System.out.println("How many would you like? Max is " + maxAmount + " items.");
+       if (maxAmount==0) {
+           System.out.println("Sorry, all out of Stock!");
+           keepAsking = false;
+       }else {
+           System.out.println("How many would you like? Max is " + maxAmount + " items.");
+       }
        //check if it works, or keep asking
        while(keepAsking){
            Scanner userInput4 = new Scanner(System.in);
@@ -32,12 +39,14 @@ public class GroceryStore {
            if(inpNumber>0 && inpNumber<=maxAmount){
                db.addItemToCart(db.getSpecificItem(itemName), inpNumber);
                keepAsking=false;
-           }else{
-               System.out.println("Please enter a valid number between 1 and " + maxAmount+".");
+           } else if (inpNumber==0) {
+               System.out.println("Okay, none added!");
+               keepAsking=false;
+           }else {
+               System.out.println("Please enter a valid number between 1 and " + maxAmount + ".");
            }
        }
    }
-
 
    public void removeItem(){
        databaseFunctions db= new databaseFunctions();
@@ -80,14 +89,14 @@ public class GroceryStore {
        if(db.returnCart().size()==0){
            System.out.println("Thanks for visiting, come back soon!");
        }else{
-           boolean yesOrno=true;
+           boolean yesOrNo=true;
            Scanner userInput = new Scanner(System.in);
-           while(yesOrno){
-               System.out.println("Would you like to try for a coupon up to 50% on off all items: yes or no?");
+           while(yesOrNo){
+               System.out.println("Would you like to try for a coupon for 0, 15, 20, or 30% off on an isle: yes or no?");
                String newline = userInput.nextLine();
                if(newline.equals("yes")){
                    coupons();
-                   yesOrno=false;
+                   yesOrNo=false;
                }else if(newline.equals("no")){
                    List<item> cart;
                    cart=db.returnCart();
@@ -117,20 +126,21 @@ public class GroceryStore {
                    System.out.println("Thanks for visiting, come back soon!");
                    //empties the cart and restocks the store
                    db.emptyCart();
-                   yesOrno=false;
+                   yesOrNo=false;
                }
            }
        }
    }
    public static void coupons(){
-       Random r = new Random();
+
        databaseFunctions db = new databaseFunctions();
        List<String> isles = Arrays.asList("produce", "bakery", "meat", "dairy", "convenience", "all");
+       List<Integer> percentages = Arrays.asList(0, 15, 20, 30);
        List<item> cart= db.returnCart();
        float total =0;
        float nonCouponTotal=0;
        String isleToApplyCoupon = randomItemChooser(isles);
-       float percent = r.nextInt(50);
+       float percent = randomItemChooser(percentages);
        System.out.println("Congratulations: you got "+percent+ "% off on all "+isleToApplyCoupon+" items! \n" );
        System.out.println("Here is your receipt:");
        SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
@@ -215,7 +225,7 @@ public class GroceryStore {
                         String newline = userInput1.nextLine();
                         if (options.contains(newline)) {
                             if(newline.equals("add item")){
-                                g.addItem(currentIsleItemList);
+                                g.addItem(isles.get(isleNumber));
                             }else if(newline.equals("remove item")){
                                 if(db.returnCart().size()==0){
                                     System.out.println("No items in your cart. Start Shopping!");
@@ -266,7 +276,7 @@ public class GroceryStore {
                             String inline = userInput2.nextLine();
                             if (options.contains(inline)) {
                                 if(inline.equals("add item")){
-                                    g.addItem(currentIsleItemList);
+                                    g.addItem(islename);
                                 }else if(inline.equals("remove item")){
                                     if(db.returnCart().size()==0){
                                         System.out.println("No items in your cart. Start Shopping!");
