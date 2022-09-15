@@ -1,3 +1,7 @@
+package DAO;
+
+import Model.item;
+import Util.connectionUtil;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -31,11 +35,22 @@ public class databaseFunctions {
        return groceryItemArray;
    }
 
-   public void printOutItems(List<item> itemArray){
-       for (int i=0; i<itemArray.size(); i++ ){
-           System.out.println( itemArray.get(i).toString());
-       }
-   }
+    public  List<item> returnAllItems(){
+        List<item> groceryItemArray = new ArrayList<>();
+        try {
+            Statement statement = conn.createStatement();
+            ResultSet rs = statement.executeQuery("Select * From groceryItems");
+            while(rs.next()){
+                item groceryItem = new item(rs.getString("item_name"), rs.getString("isle"),
+                        rs.getInt("quantity"),rs.getFloat("price"));
+                groceryItemArray.add(groceryItem);
+            }
+            return groceryItemArray;
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
    
    public void addItemToCart(item thing, int amount){
        try{
@@ -48,7 +63,7 @@ public class databaseFunctions {
                statement.setString(2, thing.item_name);
                statement.executeUpdate();
                //edit the original database for the amount
-               updateGroceryStore(thing, getSpecificItem(thing.item_name).quantity - amount);
+               updateGroceryStore(thing, getSpecificThing(thing.item_name).quantity - amount);
            }else {
                PreparedStatement statement = conn.prepareStatement("insert into groceryCart(item_name, " +
                        "isle, quantity, price)" + "values (?, ?,?,?)");
@@ -58,7 +73,7 @@ public class databaseFunctions {
                statement.setFloat(4, thing.price);
                statement.executeUpdate();
                //edit the original database for the amount
-               updateGroceryStore(thing, getSpecificItem(thing.item_name).quantity - amount);
+               updateGroceryStore(thing, getSpecificThing(thing.item_name).quantity - amount);
            }
        }catch(SQLException e){
            e.printStackTrace();
@@ -66,7 +81,7 @@ public class databaseFunctions {
 
    }
 
-    public item getSpecificItem(String name){
+    public item getSpecificThing(String name){
         try {
             List<item> groceryItemArray = new ArrayList<>();
             PreparedStatement statement = conn.prepareStatement("Select * From groceryItems where item_name = ?");
@@ -92,7 +107,7 @@ public class databaseFunctions {
                 PreparedStatement statement = conn.prepareStatement("delete from groceryCart where item_name = ?");
                 statement.setString(1,thing.item_name);
                 statement.executeUpdate();
-                updateGroceryStore(thing, quantity+getSpecificItem(thing.item_name).quantity);
+                updateGroceryStore(thing, quantity+ getSpecificThing(thing.item_name).quantity);
 
             }else{
                 // we want to remove some
@@ -101,7 +116,7 @@ public class databaseFunctions {
                 statement.setInt(1,getSpecificCartItem(thing.item_name).quantity-quantity);
                 statement.setString(2, thing.item_name);
                 statement.executeUpdate();
-                updateGroceryStore(thing, quantity+getSpecificItem(thing.item_name).quantity);
+                updateGroceryStore(thing, quantity+ getSpecificThing(thing.item_name).quantity);
             }
 
         }catch(SQLException e){
@@ -152,11 +167,10 @@ public class databaseFunctions {
                 groceryItemArray.add(groceryItem);
             }
             return groceryItemArray.get(0);
-
         }catch(SQLException e){
             e.printStackTrace();
         }
-        return null; //should not get here so it is fine
+        return null;
     }
 
     public void emptyCart(){

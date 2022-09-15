@@ -1,3 +1,5 @@
+package Model;
+
 public class item {
     public String item_name ;
     public String isle;
@@ -10,12 +12,14 @@ public class item {
         this.quantity = quantity;
         this.price = price;
     }
+    public item(){}
+
 
     @Override
     public String toString() {
         return "Item Name: " + item_name  +
                 "  | Isle: " + isle  +
                 "  | Quantity: " + quantity +
-                "  | Price: $" + String. format("%.2f", price) ;
+                "  | Price: $" + String. format("%.2f", price) +"\n" ;
     }
 }
