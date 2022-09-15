@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="groceryStoreTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-09-11T04:21:46" hostname="Harveens-MacBook-Pro-2.local" time="0.811">
+<testsuite name="groceryStoreTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-09-15T21:42:51" hostname="Harveens-MacBook-Pro-2.local" time="0.867">
   <properties/>
-  <testcase name="addItem()" classname="groceryStoreTest" time="0.811"/>
+  <testcase name="addItem()" classname="groceryStoreTest" time="0.867"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
