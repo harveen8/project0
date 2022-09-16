@@ -270,12 +270,14 @@ public class databaseFunctions {
         return null;
     }
 
-    public void emptyCart(){
+    public List<item> emptyCart(){
         databaseFunctions db= new databaseFunctions();
+        List<item> groceryItemArray = new ArrayList<>();
         List<item> cart= db.returnCart();
         for(int i=0; i< cart.size(); i++){
             db.removeItemFromCart(cart.get(i), cart.get(i).quantity);
         }
+        return groceryItemArray;
     }
 
     public boolean existsInCart(item thing){

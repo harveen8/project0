@@ -20,6 +20,9 @@ public class GroceryStore {
         app.start(9000);
         app.get("/grocerystore/items", ctx -> {ctx.json(gs.getAllItems());});
         app.get("/grocerystore/cart", ctx -> {ctx.json(cs.itemsInCart());});
+        app.get("/grocerystore/cart/items/{name}", ctx ->
+        {ctx.json(cs.getSpecificCartItem(ctx.pathParam("name")));
+        });
         app.get("/grocerystore/{isle}", ctx ->
         {ctx.json(gs.getItemInIsle(ctx.pathParam("isle")));
         });
@@ -36,6 +39,10 @@ public class GroceryStore {
             item requestPainting = mapper.readValue(ctx.body(), item.class);
             cs.removeItemInCart(requestPainting.item_name, requestPainting.quantity);
         });
+        app.get("/grocerystore/cart/empty", ctx -> {ctx.json(cs.emptyCart());});
+
+
+
 
 
     }

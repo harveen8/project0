@@ -19,8 +19,11 @@ public class cartService {
         return db.returnCart();
     }
 
-    public void emptyCart(){
-         db.emptyCart();
+    public item getSpecificCartItem(String name){
+        return db.getSpecificCartItem(name);
+    }
+    public List<item> emptyCart(){
+         return db.emptyCart();
     }
 
     public void removeItemInCart(String name, int quantity){
