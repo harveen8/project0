@@ -1,7 +1,10 @@
 package DAO;
 
 import Model.item;
+import Model.logIn;
+import Service.adminService;
 import Util.connectionUtil;
+import org.apache.log4j.Logger;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,14 +14,97 @@ import java.util.stream.Stream;
 
 public class databaseFunctions {
     Connection conn= connectionUtil.getConnection();
-    public boolean checkIfIn(String thing, List<item> thingList){
-        for(int i=0; i< thingList.size(); i++){
-            String name= thingList.get(i).item_name;
-            if(name.equals(thing)){
-                return true;
+//    public boolean checkIfIn(String thing, List<item> thingList){
+//        for(int i=0; i< thingList.size(); i++){
+//            String name= thingList.get(i).item_name;
+//            if(name.equals(thing)){
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
+    public List<logIn> getAllAdmins(){
+        List<logIn> logInList =new ArrayList<>();
+        try {
+            Statement statement = conn.createStatement();
+            ResultSet rs = statement.executeQuery("select * from admin");
+            while(rs.next()){
+                logIn newLog = new logIn(rs.getString("username"), rs.getString("password"));
+                logInList.add(newLog);
             }
+            Logger logger = Logger.getLogger(databaseFunctions.class);
+            logger.info("Successfully Got All Admins");
+            return logInList;
+        }catch(SQLException e){
+            e.printStackTrace();
         }
-        return false;
+        return null;
+    }
+    public void addAdmin(String username, String password){
+        try {
+            PreparedStatement statement = conn.prepareStatement("insert into admin(username, " +
+            " password)" + "values (?, ?)");
+            statement.setString(1, username);
+            statement.setString(2, password);
+            statement.executeUpdate();
+            Logger logger = Logger.getLogger(databaseFunctions.class);
+            logger.info("Successfully Added a new Admin");
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+    }
+    public void removeAdmin(String username){
+        try {
+            PreparedStatement statement = conn.prepareStatement("delete from admin where " +
+                    " username = ? ");
+            statement.setString(1, username);
+            statement.executeUpdate();
+            Logger logger = Logger.getLogger(databaseFunctions.class);
+            logger.info("Successfully Removed an Admin");
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void addItemToGroceryStore(item thing){
+        try {
+            PreparedStatement statement = conn.prepareStatement("insert into groceryItem(item_name, " +
+                    " quantity, price)" + "values (?, ?,?)");
+            statement.setString(1, thing.item_name);
+            statement.setInt(2, thing.quantity);
+            statement.setFloat(3, thing.price);
+            statement.executeUpdate();
+            if(thing.isle.equals("produce")){
+                PreparedStatement statement1 = conn.prepareStatement("insert into produce(item_name" +
+                        ")" + "values (?)");
+                statement1.setString(1, thing.item_name);
+                statement1.executeUpdate();
+            }else if(thing.isle.equals("bakery")){
+                PreparedStatement statement1 = conn.prepareStatement("insert into bakery(item_name" +
+                        ")" + "values (?)");
+                statement1.setString(1, thing.item_name);
+                statement1.executeUpdate();
+              }else if(thing.isle.equals("meat")) {
+                PreparedStatement statement1 = conn.prepareStatement("insert into meat(item_name" +
+                        ")" + "values (?)");
+                statement1.setString(1, thing.item_name);
+                statement1.executeUpdate();
+              }else if(thing.isle.equals("dairy")) {
+                PreparedStatement statement1 = conn.prepareStatement("insert into dairy(item_name" +
+                        ")" + "values (?)");
+                statement1.setString(1, thing.item_name);
+                statement1.executeUpdate();
+            }else{
+                PreparedStatement statement1 = conn.prepareStatement("insert into convenience(item_name" +
+                        ")" + "values (?)");
+                statement1.setString(1, thing.item_name);
+                statement1.executeUpdate();
+            }
+            Logger logger = Logger.getLogger(databaseFunctions.class);
+            logger.info("Successfully Added an Item to the Grocery Store");
+        }catch(SQLException e){
+            e.printStackTrace();
+        }
     }
 
     public String getItemIsle(String name){
@@ -33,21 +119,31 @@ public class databaseFunctions {
     }
 
 
-    public List<item> connectLists(List<item> one,List<item> two ){
+    public List<item> connectLists(List<item> one,List<item> two){
        List<item> newList = Stream.concat(one.stream(), two.stream())
                .collect(Collectors.toList());
        return newList;
     }
    public  List<item> returnItemsInIsle(String isleName){
       if(isleName.equals("produce")){
+          Logger logger = Logger.getLogger(databaseFunctions.class);
+          logger.info("Successfully Returned All Items in Produce Isle");
           return returnAllProduceItems();
       }else if(isleName.equals("bakery")){
+          Logger logger = Logger.getLogger(databaseFunctions.class);
+          logger.info("Successfully Returned All Items in Bakery Isle");
           return returnAllBakeryItems();
       }else if(isleName.equals("meat")){
+          Logger logger = Logger.getLogger(databaseFunctions.class);
+          logger.info("Successfully Returned All Items in Meat Isle");
           return returnAllMeatItems();
       }else if(isleName.equals("dairy")){
+          Logger logger = Logger.getLogger(databaseFunctions.class);
+          logger.info("Successfully Returned All Items in Dairy Isle");
           return returnAllDairyItems();
       }else if(isleName.equals("convenience")){
+          Logger logger = Logger.getLogger(databaseFunctions.class);
+          logger.info("Successfully Returned All Items in Convenience Isle");
           return returnAllConvenienceItems();
       }else{
           return null;
@@ -63,6 +159,8 @@ public class databaseFunctions {
         List<item> dairy=returnAllDairyItems();
         List<item> pbmd=connectLists(pbm,dairy);
         List<item> convenience = returnAllConvenienceItems();
+        Logger logger = Logger.getLogger(databaseFunctions.class);
+        logger.info("Successfully Returned an All Grocery Store Items");
         return connectLists(pbmd,convenience);
     }
     public List<item> returnAllProduceItems(){
@@ -169,6 +267,8 @@ public class databaseFunctions {
                statement.setInt(1,newOne.quantity+amount);
                statement.setString(2, thing.item_name);
                statement.executeUpdate();
+               Logger logger = Logger.getLogger(databaseFunctions.class);
+               logger.info("Successfully Updated "+thing.item_name+ " Into The Cart");
                //edit the original database for the amount
                updateGroceryStore(thing, getSpecificThing(thing.item_name).quantity - amount);
            }else {
@@ -178,6 +278,8 @@ public class databaseFunctions {
                statement.setInt(2, amount);
                statement.setFloat(3, thing.price);
                statement.executeUpdate();
+               Logger logger = Logger.getLogger(databaseFunctions.class);
+               logger.info("Successfully Added "+thing.item_name+ " Into The Cart");
                //edit the original database for the amount
                updateGroceryStore(thing, getSpecificThing(thing.item_name).quantity - amount);
            }
@@ -205,7 +307,8 @@ public class databaseFunctions {
                 statement.setString(1,thing.item_name);
                 statement.executeUpdate();
                 updateGroceryStore(thing, quantity+ getSpecificThing(thing.item_name).quantity);
-
+                Logger logger = Logger.getLogger(databaseFunctions.class);
+                logger.info("Successfully Removed "+thing.item_name+ " From The Cart");
             }else{
                 // we want to remove some
                 PreparedStatement statement = conn.prepareStatement("update groceryCart set quantity = ? " +
@@ -214,6 +317,8 @@ public class databaseFunctions {
                 statement.setString(2, thing.item_name);
                 statement.executeUpdate();
                 updateGroceryStore(thing, quantity+ getSpecificThing(thing.item_name).quantity);
+                Logger logger = Logger.getLogger(databaseFunctions.class);
+                logger.info("Successfully Updated "+thing.item_name+ " In The Cart");
             }
 
         }catch(SQLException e){
@@ -245,10 +350,12 @@ public class databaseFunctions {
                         rs.getInt("quantity"),rs.getFloat("price"));
                 groceryCartArray.add(groceryItem);
             }
+
         }catch(SQLException e){
             e.printStackTrace();
         }
-
+        Logger logger = Logger.getLogger(databaseFunctions.class);
+        logger.info("Successfully Returned The Cart");
         return groceryCartArray;
 
         }
@@ -263,6 +370,8 @@ public class databaseFunctions {
                         rs.getInt("quantity"),rs.getFloat("price"));
                 groceryItemArray.add(groceryItem);
             }
+            Logger logger = Logger.getLogger(databaseFunctions.class);
+            logger.info("Successfully Got "+name+" From The Cart");
             return groceryItemArray.get(0);
         }catch(SQLException e){
             e.printStackTrace();
@@ -277,6 +386,8 @@ public class databaseFunctions {
         for(int i=0; i< cart.size(); i++){
             db.removeItemFromCart(cart.get(i), cart.get(i).quantity);
         }
+        Logger logger = Logger.getLogger(databaseFunctions.class);
+        logger.info("Successfully Emptied The Cart");
         return groceryItemArray;
     }
 
